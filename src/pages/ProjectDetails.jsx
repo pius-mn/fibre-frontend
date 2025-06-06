@@ -29,10 +29,17 @@ const ProjectDetails = () => {
   useEffect(() => {
     const role = localStorage.getItem('userRole') || '';
     setRole(role);
+    const projectId = Number(id);
+    if (!id || isNaN(projectId) || !Number.isInteger(projectId) || projectId <= 0) {
+      addMessage('error', 'Invalid project ID.');
+      navigate('/unauthorized'); // Or another error page or fallback
+      return; // Stop further execution
+    }
     const fetchData = async () => {
       try {
         setLoading(true);
-        const { milestoneData, dependencyData, projectData } = await fetchProjectData(id);
+        const { milestoneData, dependencyData, projectData } = await fetchProjectData(projectId);
+        console.log("project data",projectData)
   
         if (!projectData) {
           addMessage('error', 'Unauthorized access or project not found.');
@@ -124,192 +131,253 @@ const ProjectDetails = () => {
         ))}
       </div>
 
-      {/* Project Details Section */}
-      <div className="bg-white rounded-lg shadow-md p-6 mb-8 border-t-4 border-green-600">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-bold text-green-800">Details for: <i>{project.project?.title || 'Unnamed Project'} </i></h2>
-          <button
-            onClick={() => setIsProjectDetailsOpen(!isProjectDetailsOpen)}
-            className="text-green-600 hover:text-green-800 focus:outline-none"
-          >
-            {isProjectDetailsOpen ? 'Collapse' : 'Expand'}
-          </button>
-        </div>
-        {isProjectDetailsOpen && (
-          <>
-            <div className="mb-4">
-              <h2 className="text-xl font-semibold mb-2 text-green-800">Project ID</h2>
-              <p className="text-green-700">
-               {project.project?.project_id|| 'No ID available.'}
-              </p>
-            </div>
-            <div className="text-sm text-green-700 mb-4">
-              Created At: {project.project?.created_at ? formatDate(project.project.created_at) : 'Date not available'}
-            </div>
-
-            <div className="mb-4">
-              <h2 className="text-xl font-semibold mb-2 text-green-800">Description</h2>
-              <p className="text-green-700">
-                {project.project?.description || 'No description available.'}
-              </p>
-            </div>
-            <div className="mb-4">
-              <h2 className="text-xl font-semibold mb-2 text-green-800">Status</h2>
-              <p className="text-green-700">
-                { project.milestones[0]?.name || "Unknown"}
-              </p>
-            </div>
-            <div className="mb-4">
-              <h2 className="text-xl font-semibold mb-2 text-green-800">Distance</h2>
-              <p className="text-green-700">
-                {project.project?.distance || 'Owner not specified.'} Km
-              </p>
-            </div>
-            <div className="mb-4">
-              <h2 className="text-xl font-semibold mb-2 text-green-800">Assigned To</h2>
-              <p className="text-green-700">
-                {project.project?.username|| 'No team members assigned.'}
-              </p>
-            </div>
-            <div className="mb-4">
-              <h2 className="text-xl font-semibold mb-2 text-green-800">Progress Overview</h2>
-              <div className="w-full bg-green-200 rounded-full h-3">
-                <div
-                  className="h-3 bg-green-600 rounded-full"
-                  style={{
-                    width: `${(project.milestones.filter((m) => m.completed).length / 6) * 100}%`,
-                  }}
-                ></div>
-              </div>
-              <p className="text-sm text-green-700 mt-2">
-                {project.milestones.filter((m) => m.completed).length} of 6 milestones completed
-              </p>
-            </div>
-          </>
-        )}
+     {/* Project Details Section */}
+<div className="bg-white rounded-xl shadow-lg p-6 mb-8 border-t-4 border-green-500 transition-all duration-300">
+  <div className="flex justify-between items-center mb-4">
+    <h2 className="text-2xl font-semibold text-green-900 truncate">
+      Details for: <span className="italic">{project.project?.title || 'Unnamed Project'}</span>
+    </h2>
+    <button
+      onClick={() => setIsProjectDetailsOpen(!isProjectDetailsOpen)}
+      className="flex items-center gap-2 px-3 py-1 text-green-600 hover:text-green-800 font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-green-300 transition-colors"
+      aria-expanded={isProjectDetailsOpen}
+      aria-label={isProjectDetailsOpen ? 'Collapse project details' : 'Expand project details'}
+    >
+      {isProjectDetailsOpen ? (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 15l7-7 7 7" />
+        </svg>
+      ) : (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+        </svg>
+      )}
+      {isProjectDetailsOpen ? 'Collapse' : 'Expand'}
+    </button>
+  </div>
+  {isProjectDetailsOpen && (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div>
+        <h3 className="text-lg font-semibold text-green-800 mb-2">Project ID</h3>
+        <p className="text-green-600">{project.project?.project_id || 'No ID available'}</p>
       </div>
-
-      {/* Milestones Section */}
-      <div className="mb-8">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-bold text-green-800">
-            Milestones ({project.milestones.length}/6)
-          </h2>
-          <button
-            onClick={() => setIsMilestonesOpen(!isMilestonesOpen)}
-            className="text-green-600 hover:text-green-800 focus:outline-none"
-          >
-            {isMilestonesOpen ? 'Collapse' : 'Expand'}
-          </button>
-        </div>
-        {isMilestonesOpen && (
-          <>
-           {project.milestones.length === 6 && (
-              <p className="text-green-800 font-semibold mt-4">
-                All 6 milestones have been added.
-              </p>
-            )}
-            {project.milestones.length < 6 && userRole === 'user' && (
-              <div className="m-4">
-                <select
-                  value={selectedMilestone}
-                  onChange={(e) => setSelectedMilestone(e.target.value)}
-                  className="border border-green-400 rounded-lg p-2 mb-4 w-full text-green-800"
-                >
-                  <option value="">Select a milestone to add</option>
-                  {milestones.map((milestone) => (
-                    <option key={milestone.id} value={milestone.id}>
-                      {milestone.name}
-                    </option>
-                  ))}
-                </select>
-                <button
-                  onClick={handleAddMilestone}
-                  className="bg-green-600 text-white px-4 py-2 rounded-lg w-full hover:bg-green-700 focus:outline-none"
-                >
-                  Add Milestone
-                </button>
-              </div>
-            )}
-            {project?.milestones.length === 0 ? (
-              <p className="text-green-700">No milestones yet. Add the first milestone!</p>
-            ) : (
-              <div className="space-y-4">
-                {project?.milestones.map((milestone) => (
-                  <MilestoneProgress key={milestone.id} milestone={milestone} />
-                ))}
-              </div>
-            )}
-           
-            
-            
-          </>
-        )}
+      <div>
+        <h3 className="text-lg font-semibold text-green-800 mb-2">Created At</h3>
+        <p className="text-green-600">
+          {project.project?.created_at ? formatDate(project.project.created_at) : 'Date not available'}
+        </p>
       </div>
-
-      {/* Dependencies Section */}
-      <div className="mb-8">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-bold text-green-800">Dependencies ({project.dependencies.length})</h2>
-          <button
-            onClick={() => setIsDependenciesOpen(!isDependenciesOpen)}
-            className="text-green-600 hover:text-green-800 focus:outline-none"
-          >
-            {isDependenciesOpen ? 'Collapse' : 'Expand'}
-          </button>
+      <div className="md:col-span-2">
+        <h3 className="text-lg font-semibold text-green-800 mb-2">Description</h3>
+        <p className="text-green-600">{project.project?.description || 'No description available'}</p>
+      </div>
+      <div>
+        <h3 className="text-lg font-semibold text-green-800 mb-2">Status</h3>
+        <span
+          className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${
+            project.milestone_id === 0
+              ? 'bg-red-100 text-red-800'
+              : project.milestones[0]?.completed
+              ? 'bg-green-100 text-green-800'
+              : 'bg-amber-100 text-amber-800'
+          }`}
+        >
+          {project.milestone_id === 0
+            ? 'Not Started'
+            : project.milestones[0]?.name
+           }
+        </span>
+      </div>
+      <div>
+        <h3 className="text-lg font-semibold text-green-800 mb-2">Distance</h3>
+        <p className="text-green-600">{project.project?.distance ? `${project.project.distance} km` : 'Not specified'}</p>
+      </div>
+      <div>
+        <h3 className="text-lg font-semibold text-green-800 mb-2">Assigned To</h3>
+        <p className="text-green-600">{project.project?.username || 'Unassigned'}</p>
+      </div>
+      <div className="md:col-span-2">
+        <h3 className="text-lg font-semibold text-green-800 mb-2">Progress Overview</h3>
+        <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+          <div
+            className="h-3 rounded-full transition-all duration-500"
+            style={{
+              width: `${(project.milestones[0]?.id / 6) * 100}%`,
+              backgroundColor:
+                (project.milestones[0]?.id / 6) * 100 === 100 ? '#10B981' :
+                (project.milestones[0]?.id / 6) * 100 > 75 ? '#22C55E' :
+                (project.milestones[0]?.id/ 6) * 100 > 50 ? '#84CC16' :
+                (project.milestones[0]?.id/ 6) * 100 > 25 ? '#FBBF24' : '#EF4444',
+            }}
+          />
         </div>
-        {isDependenciesOpen && (
-          <>
-          {project.milestones.length < 3 && userRole === 'user' && (
-              <div className="m-4">
-                <select
-                  value={selectedDependency}
-                  onChange={(e) => setSelectedDependency(e.target.value)}
-                  className="border border-green-400 rounded-lg p-2 mb-4 w-full text-green-800"
+        <p className="text-sm text-green-600 mt-2">
+          {project.milestones[0]?.id} of 6 milestones reached ({((project.milestones[0]?.id / 6) * 100).toFixed(0)}%)
+        </p>
+      </div>
+    </div>
+  )}
+</div>
+
+{/* Milestones Section */}
+<div className="bg-white rounded-xl shadow-lg p-6 mb-8 border-t-4 border-green-500 transition-all duration-300">
+  <div className="flex justify-between items-center mb-4">
+    <h2 className="text-2xl font-semibold text-green-900">
+      Milestones ({project.milestones.length}/6)
+    </h2>
+    <button
+      onClick={() => setIsMilestonesOpen(!isMilestonesOpen)}
+      className="flex items-center gap-2 px-3 py-1 text-green-600 hover:text-green-800 font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-green-300 transition-colors"
+      aria-expanded={isMilestonesOpen}
+      aria-label={isMilestonesOpen ? 'Collapse milestones' : 'Expand milestones'}
+    >
+      {isMilestonesOpen ? (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 15l7-7 7 7" />
+        </svg>
+      ) : (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+        </svg>
+      )}
+      {isMilestonesOpen ? 'Collapse' : 'Expand'}
+    </button>
+  </div>
+  {isMilestonesOpen && (
+    <div className="space-y-4">
+      {project.milestones.length === 6 && (
+        <p className="text-green-700 font-medium bg-green-50 p-3 rounded-lg">
+          All 6 milestones have been added.
+        </p>
+      )}
+      {project.milestones.length < 6 && userRole === 'user' && (
+        <div className="bg-green-50 p-4 rounded-lg">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <select
+              value={selectedMilestone}
+              onChange={(e) => setSelectedMilestone(e.target.value)}
+              className="flex-1 border border-green-300 rounded-lg p-2 text-green-800 focus:ring-2 focus:ring-green-500 focus:outline-none"
+              aria-label="Select milestone to add"
+            >
+              <option value="">Select a milestone to add</option>
+              {milestones.map((milestone) => (
+                <option key={milestone.id} value={milestone.id}>
+                  {milestone.name}
+                </option>
+              ))}
+            </select>
+            <button
+              onClick={handleAddMilestone}
+              disabled={!selectedMilestone}
+              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+              aria-label="Add selected milestone"
+            >
+              Add Milestone
+            </button>
+          </div>
+        </div>
+      )}
+      {project.milestones.length === 0 ? (
+        <p className="text-green-700 text-center py-4">No milestones yet. Add the first milestone!</p>
+      ) : (
+        <div className="grid grid-cols-1 gap-4">
+          {project.milestones.map((milestone) => (
+            <MilestoneProgress key={milestone.id} milestone={milestone} />
+          ))}
+        </div>
+      )}
+    </div>
+  )}
+</div>
+
+{/* Dependencies Section */}
+<div className="bg-white rounded-xl shadow-lg p-6 mb-8 border-t-4 border-green-500 transition-all duration-300">
+  <div className="flex justify-between items-center mb-4">
+    <h2 className="text-2xl font-semibold text-green-900">
+      Dependencies ({project.dependencies.length})
+    </h2>
+    <button
+      onClick={() => setIsDependenciesOpen(!isDependenciesOpen)}
+      className="flex items-center gap-2 px-3 py-1 text-green-600 hover:text-green-800 font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-green-300 transition-colors"
+      aria-expanded={isDependenciesOpen}
+      aria-label={isDependenciesOpen ? 'Collapse dependencies' : 'Expand dependencies'}
+    >
+      {isDependenciesOpen ? (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 15l7-7 7 7" />
+        </svg>
+      ) : (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+        </svg>
+      )}
+      {isDependenciesOpen ? 'Collapse' : 'Expand'}
+    </button>
+  </div>
+  {isDependenciesOpen && (
+    <div className="space-y-4">
+      {project.milestones.length < 3 && userRole === 'user' && (
+        <div className="bg-green-50 p-4 rounded-lg">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <select
+              value={selectedDependency}
+              onChange={(e) => setSelectedDependency(e.target.value)}
+              className="flex-1 border border-green-300 rounded-lg p-2 text-green-800 focus:ring-2 focus:ring-green-500 focus:outline-none"
+              aria-label="Select dependency to add"
+            >
+              <option value="">Select a dependency to add</option>
+              {dependencies.map((dependency) => (
+                <option key={dependency.id} value={dependency.id}>
+                  {dependency.name}
+                </option>
+              ))}
+            </select>
+            <button
+              onClick={handleAddDependency}
+              disabled={!selectedDependency}
+              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+              aria-label="Add selected dependency"
+            >
+              Add Dependency
+            </button>
+          </div>
+        </div>
+      )}
+      {project.dependencies.length === 0 ? (
+        <p className="text-green-700 text-center py-4">No dependencies to manage.</p>
+      ) : (
+        <ul className="grid grid-cols-1 gap-4">
+          {project.dependencies.map((dependency) => (
+            <li
+              key={dependency.id}
+              className="p-4 border border-green-200 rounded-lg bg-green-50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
+            >
+              <div className="flex items-center gap-2">
+                <span
+                  className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
+                    dependency.cleared ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'
+                  }`}
                 >
-                  <option value="">Select a dependency to add</option>
-                  {dependencies.map((dependency) => (
-                    <option key={dependency.id} value={dependency.id}>
-                      {dependency.name}
-                    </option>
-                  ))}
-                </select>
-                <button
-                  onClick={handleAddDependency}
-                  className="bg-green-600 text-white px-4 py-2 rounded-lg w-full hover:bg-green-700 focus:outline-none"
-                >
-                  Add Dependency
-                </button>
+                  {dependency.cleared ? 'Cleared' : 'Not Cleared'}
+                </span>
+                <span className="text-green-800 font-medium">{dependency.name}</span>
               </div>
-            )}
-            <ul className="space-y-2">
-              {project?.dependencies.length === 0 ? (
-                <li className="text-green-700">No dependencies to manage</li>
-              ) : (
-                project?.dependencies.map((dependency) => (
-                  <li
-                    key={dependency.id}
-                    className="p-4 border rounded-lg bg-green-100 flex justify-between items-center"
-                  >
-                    <span className="text-green-800">
-                      {dependency.name} - {dependency.cleared ? 'Cleared' : 'Not Cleared'}
-                    </span>
-                    {!dependency.cleared && (
-                      <button
-                        onClick={() => handleClearDependency(dependency.id)}
-                        className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 focus:outline-none"
-                      >
-                        Mark as Cleared
-                      </button>
-                    )}
-                  </li>
-                ))
+              {!dependency.cleared && userRole === 'user' && (
+                <button
+                  onClick={() => handleClearDependency(dependency.id)}
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-300 transition-colors"
+                  aria-label={`Mark ${dependency.name} as cleared`}
+                >
+                  Mark as Cleared
+                </button>
               )}
-            </ul>
-            
-          </>
-        )}
-      </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  )}
+</div>
     </div>
   );
 };

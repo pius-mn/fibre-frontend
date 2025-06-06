@@ -14,8 +14,10 @@ Authapi.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
-    if (error.response.status === 403 && !originalRequest._retry) {
+
+    if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
+
       const refreshToken = localStorage.getItem('refreshToken');
       if (refreshToken) {
         try {
@@ -25,13 +27,17 @@ Authapi.interceptors.response.use(
           return Authapi(originalRequest);
         } catch (err) {
           localStorage.clear();
-          console.log("axios error",err)
           window.location.href = '/';
+          return Promise.reject(err);
         }
+      } else {
+        localStorage.clear();
+        window.location.href = '/';
       }
     }
     return Promise.reject(error);
   }
 );
+
 
 export default Authapi;

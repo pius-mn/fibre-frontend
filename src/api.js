@@ -2,7 +2,7 @@ import Authapi from './utils/axios'
 
 // General fetch function to handle errors
 const fetchData = async (url, method = 'GET', body = null) => {
-  console.log(`url: ${url}, method: ${method}`);
+  
   const config = {
     url,
     method,

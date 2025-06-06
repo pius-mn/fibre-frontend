@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect,useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import ProjectForm from './ProjectForm';
 import { getProjectDetails, createProject, updateProject,getUsers } from '../../api';
@@ -58,7 +58,9 @@ const ProjectFormPage = () => {
       setLoading(false);
     }
   };
-
+  const regularUsers = useMemo(() => {
+    return users.filter(user => user.role === 'user');
+  }, [users]);
   return (
     <div className="max-w-2xl mx-auto p-6">
       <h2 className="text-2xl font-bold mb-6">
@@ -76,7 +78,7 @@ const ProjectFormPage = () => {
           initialData={initialData}
           onSubmit={handleSubmit}
           isSubmitting={loading}
-          users={users}
+          users={regularUsers}
         />
       )}
     </div>

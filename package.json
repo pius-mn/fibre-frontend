@@ -12,11 +12,14 @@
   "dependencies": {
     "@heroicons/react": "^2.2.0",
     "axios": "^1.7.7",
+    "file-saver": "^2.0.5",
     "lodash": "^4.17.21",
     "lodash-es": "^4.17.21",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-router-dom": "^6.27.0"
+    "react-router-dom": "^6.27.0",
+    "recharts": "^2.15.3",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@eslint/js": "^9.13.0",

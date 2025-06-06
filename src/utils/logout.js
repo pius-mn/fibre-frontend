@@ -1,27 +1,27 @@
 import { useNavigate } from 'react-router-dom';
-import Authapi from '../utils/axios'; // Import your custom axios instance
+import Authapi from '../utils/axios';
 
 const useLogout = () => {
   const navigate = useNavigate();
 
   const logout = async () => {
+    const refreshToken = localStorage.getItem('refreshToken');
+
+    // Immediately clear localStorage regardless of API call success
+    localStorage.removeItem('token');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('userId');
+
     try {
-      const refreshToken = localStorage.getItem('refreshToken');
-      localStorage.removeItem('token');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('userRole');
-
-      // Call the logout API using axios
-      await Authapi.post('/auth/logout', { refreshToken });
-
-      // Clear tokens and user role from local storage
-      
-
-      // Navigate back to the login page
-      navigate('/');
+      if (refreshToken) {
+        await Authapi.post('/auth/logout', { refreshToken });
+      }
     } catch (error) {
-      console.error('Logout error:', error);
-      // Optionally handle specific error responses, e.g., show a notification
+      console.error('Logout API call failed:', error?.response?.data || error.message);
+      // Optionally handle error (e.g., toast notification or logging)
+    } finally {
+      navigate('/login'); // Always redirect, regardless of error
     }
   };
 
